@@ -107,4 +107,4 @@ $$
 \gamma = \tau \frac{k_B T}{m}.
 $$
 
-Thus, we have related a rough description of microscopic collisions, in terms of \(\tau, T, m\) to a macroscopic parameters, the kinematic viscosity. What more can you want from life?
+Thus, we have related a rough description of microscopic collisions, in terms of \(\tau, T, m\) to a macroscopic quantity, the kinematic viscosity. What more can you want from life?
