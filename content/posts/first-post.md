@@ -5,7 +5,7 @@ draft: false
 tags: ["physics"]
 ---
 {{< mathjax >}}
-These are notes about deriving the Navier-Stokes equation starting from the Boltzman equation, in a somewhat schematic/simplified way.
+These are notes about deriving the [Navier-Stokes equation for (incompressible) viscous flows](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow) starting from the Boltzman equation, in a somewhat schematic/simplified way.
 
 The Boltzman equation is
 $$ \partial_t f + v\cdot \nabla f = \Gamma(f).$$
@@ -98,13 +98,13 @@ Due to our assumption of incompressibility, \(\nabla \cdot u = 0\), so the extra
 
 Leading to the Navier-Stokes equation
 $$
-\partial_t u^i + u^j \partial_j u^i + \partial_i p - \gamma \Delta u^i = 0,
+\partial_t u^i + u^j \partial_j u^i + \partial_i p - \nu \Delta u^i = 0,
 $$
 where we have used that 
 $$ (P^{(0)})^{ij} = p \delta^{ij}, $$
 and we have identified the kinematic viscosity
 $$
-\gamma = \tau \frac{k_B T}{m}.
+\nu = \tau \frac{k_B T}{m}.
 $$
 
 Thus, we have related a rough description of microscopic collisions, in terms of \(\tau, T, m\) to a macroscopic quantity, the kinematic viscosity. What more can you want from life?
