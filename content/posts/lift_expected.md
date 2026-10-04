@@ -11,7 +11,7 @@ tags: ["c++"]
 Syntax sugar for error-handling using `std::expected`
 {{< /lead >}}
 
-Suppose you have some types `In`, `Out`, and that there is a way to compute `Out` from `In`
+Suppose you have some types `In`, `Out`, and that there is a natural way to compute `Out` from `In` in three steps,
 as follows:
 
 ```cpp
@@ -21,21 +21,20 @@ struct In{};
 struct Out{};
 
 A computeA(In);
-B computeB(In);
+B computeB(A);
 
 Out computeOut(A, B);
 
 Out computeOut(In in)
 {
     auto a = computeA(in);
-    auto b = computeB(in);
+    auto b = computeB(a);
     return computeOut(a, b);
 }
 ```
 
-The point here is that it is maybe natural to split up the computation of `Out` in these two sub-computations.
 Now suppose that each of `computeA(In)`, `computeB(In)`, `computeOut(A, B)` should rather return a `std::expected`, with the corresponding
-output type as a value type, and some common `Error` type. Assuming that we propagate the first error encountered, the code will then naturally read:
+output type as a value type, and some common `Error` type. Assuming that we want to return on the first error encountered, the code will then read:
 
 ```cpp
 std::expected<A, Error> computeA(In);
@@ -43,31 +42,56 @@ std::expected<B, Error> computeB(In);
 
 std::expected<Out, Error> computeOut(In)
 {
-    auto a_expected = computeA(in);
-    if (!a_expected)
+    auto a = computeA(in);
+    if (!a)
     {
-        return a_expected.error();
+        return a.error();
     }
 
-    auto b_expected = computeB(in);
-    if (!b_expected)
+    auto b = computeB(*a);
+    if (!b)
     {
-        return b_expected.error();
+        return b.error();
     }
 
     return computeOut(*a, *b);
 }
 ```
+This is clean code, by my standards. But the original clarity of the way the computation flows is not that apparent anymore.
 
-That's actually not too bad. May this be the worst we encounter in production code.
+In particular, if you start introducing the propper words of your software's domain, a reader's mind
+will have to bear that cognitive load. Some part of the subconcious will try to grasp in what cases some error will occur.
+The picture of the computational graph wouldn't pop as easily as in the previous listing. 
 
-I would argue, though, that the original clarity of the way the computation flows is not that apparent anymore.
-In particular if you start introducing the propper words of your software's domain, a reader's mind
-looking at this first thinks 'Oh ohh, here we have some computation of this foo or that bar dealing with exceptional cases
-here and there'. The picture of the computational graph wouldn't pop as easily to mind as in the previous listing.
-The problem becomes even more pronounced if the steps involved are more elaborate, possibly looking like this:
+One could also consider how this code might change. Maybe the computation will become more involved in the future,
+possibly looking like this:
+```cpp
+std::expected<Out, Error> computeOut(In1 in1, In2 in1)
+{
+    auto a = computeA(In1);
+    if (!a)
+    {
+        return a.error();
+    }
 
-Compare
+    auto b = computeB(*a, in1);
+    if (!b)
+    {
+        return b.error();
+    }
+
+    auto c = computeC(*a, *b, In1);
+    if (!c)
+    {
+        return c.error();
+    }
+
+    return computeOut(*a, *b, *c);
+}
+```
+Again, look at the code and imagine that instead of `a`, `b`, `c` you have `access_key`, `apfel_strudel` and `the_thing_we_named_after_the_meeting`.
+
+Here's the version without error-handling:
 ```cpp
 Out computeOut(In1 in1, In2 in2)
 {
@@ -77,44 +101,19 @@ Out computeOut(In1 in1, In2 in2)
     return computeOut(a, b, c);
 }
 ```
-with
-```cpp
-std::expected<Out, Error> computeOut(In1, In2)
-{
-    auto a_expected = computeA(In1);
-    if (!a_expected)
-    {
-        return a_expected.error();
-    }
-
-    auto b_expected = computeB(a);
-    if (!b_expected)
-    {
-        return a_expected.error();
-    }
-
-    auto c_expected = computeC(a, b, In1);
-    if (!c_expected)
-    {
-        return a_expected.error();
-    }
-
-    return computeOut(a, b, c);
-}
-```
-Now there are multiple dependencies at each computation step, and your eyes have to jump between the
-error-handling lines to follow the flow.
 
 A solution I though of would be to 'lift' each `compute-` function to accept expected values as arguments,
-and, if any of the arguments `has_error()`, to return one of the argument errors, say the first one.
+and do the obvious thing if any of the arguments is in an erroneous state. I use the word 'to lift' in the sense that
+the `computeB` function, taking arguments of type `A` and `In1`, is lifted to act on a larger domain that includes expected values
+for each argument.
 
 The code would then read:
 ```cpp
-std::expected<Out, Error> computeOut(In1, In2)
+std::expected<Out, Error> computeOut(In1 in1, In2 in2)
 {
-    auto a = computeA(In1);
+    auto a = computeA(in1); // lifting here is not necessary
     auto b = lift(computeB)(a);
-    auto c = lift(computeC)(a, b, In1);
+    auto c = lift(computeC)(a, b, in2);
     return lift(computeOut)(a, b, c);
 }
 ```
