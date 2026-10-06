@@ -33,7 +33,7 @@ Out computeOut(In in)
 }
 ```
 
-Now suppose that each of `computeA(In)`, `computeB(In)`, `computeOut(A, B)` should rather return a `std::expected`, with the corresponding
+Now suppose that each of `computeA(In)`, `computeB(A)`, `computeOut(A, B)` should rather return a `std::expected`, with the corresponding
 output type as a value type, and some common `Error` type. Assuming that we want to return on the first error encountered, the code will then read:
 
 ```cpp
@@ -89,7 +89,7 @@ std::expected<Out, Error> computeOut(In1 in1, In2 in1)
     return computeOut(*a, *b, *c);
 }
 ```
-Again, look at the code and imagine that instead of `a`, `b`, `c` you have `access_key`, `apfel_strudel` and `the_thing_we_named_after_the_meeting`.
+Again, look at the code and imagine that instead of `a`, `b`, `c` you have `access_key`, `apfel_strudel` and `the_thing_we_named_after_the_meeting`. TODO footnote AI suggested the_thing_we_named_after_the_meeting.
 
 Here's the version without error-handling:
 ```cpp
@@ -102,16 +102,15 @@ Out computeOut(In1 in1, In2 in2)
 }
 ```
 
-A solution I though of would be to 'lift' each `compute-` function to accept expected values as arguments,
-and do the obvious thing if any of the arguments is in an erroneous state. I use the word 'to lift' in the sense that
-the `computeB` function, taking arguments of type `A` and `In1`, is lifted to act on a larger domain that includes expected values
-for each argument.
+A solution I though of would be to _lift_ some of the compute-functions to accept expected values as arguments,
+and, if any of the arguments is in an erroneous state, to forward the error. I use the expression "to lift" in the sense that, for instance, 
+the `computeB` function, taking an argument of type `A`, is _lifted_ to act on the larger domain `std::expected<A, Error>`.
 
 The code would then read:
 ```cpp
 std::expected<Out, Error> computeOut(In1 in1, In2 in2)
 {
-    auto a = computeA(in1); // lifting here is not necessary
+    auto a = computeA(in1);
     auto b = lift(computeB)(a);
     auto c = lift(computeC)(a, b, in2);
     return lift(computeOut)(a, b, c);
@@ -119,12 +118,6 @@ std::expected<Out, Error> computeOut(In1 in1, In2 in2)
 ```
 
 The expression `lift(computeB)` should be a callable which accepts `std::expected<A, Error>` and returns `std::expected<B, Error>`, the usual return type of computeB. If the argument has a value, the return is just the value to which computeB is applied, otherwise the error is returned.
-
-The term 'lift' is used in mathematics in the situation that one deals with a function, let's call it $f$, defined on some "small" space $U$,
-and one can identify a mapping $h$ between $U$ and some larger space $V$, as well as a mapping $F$ with $V$ as a domain, such that
-$f = F \circ h$. One can say that $F$ is a lifted version of $f$. Imagine for a moment that $U$ is just some subset of $V$, and that $h$ is just an identity mapping. The point then is that $F$ is a bit more general than $f$, while being the same as $f$ on $U$. One could say
-that by going from $f$ to $F$, $f$ has been lifted to act on the larger space $V$. Note that usually the mapping $h$ is called the lift or lifting of $f$. In correspondence to our code, $f$ would correspond to `computeB` and $F$ would correspond to `lift(computeB)`.
-The mapping $h$ would be the mapping that takes an `A a` and turns it into `std::expected<A, Error>{a}`.
 
 Note also that the lifted function, for convenience, should also support receiving a plain type for any of its arguments, as is required by:
 ```cpp
