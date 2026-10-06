@@ -1,10 +1,10 @@
 ---
 title: "MaPhy"
-description: "Downloadable notes on mathematical physics."
+description: "Downloadable notes on maths & physics."
 ---
 
 {{< lead >}}
-Downloadable notes on mathematical physics.
+Downloadable notes
 {{< /lead >}}
 
 {{< maphy-paper
