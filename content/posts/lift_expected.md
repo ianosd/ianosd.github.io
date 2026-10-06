@@ -1,5 +1,5 @@
 ---
-title: "Lifting expected-valued functions for better chaining"
+title: "Lifting std::expected-valued functions for better chaining"
 date: 2026-10-03
 draft: false
 tags: ["c++"]

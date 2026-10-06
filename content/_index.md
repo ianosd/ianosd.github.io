@@ -2,4 +2,6 @@
 title: "Home"
 ---
 
-A blog about math, physics, and the occasional unsolicited advice.
+Short pieces mostly about maths and physics.
+
+I keep more elaborate notes at [MaPhy](/maphy/).

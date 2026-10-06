@@ -1,0 +1,12 @@
+{{- $file := .Get "file" -}}
+{{- $title := .Get "title" -}}
+{{- $subtitle := .Get "subtitle" -}}
+{{- with resources.Get $file -}}
+<section class="mb-8">
+  <h2><a href="{{ .RelPermalink }}">{{ $title }}</a></h2>
+  <p>{{ $subtitle }}</p>
+  <a href="{{ .RelPermalink }}" download>Download PDF</a>
+</section>
+{{- else -}}
+  {{- errorf "MaPhy paper resource %q was not found" $file -}}
+{{- end -}}
